@@ -65,55 +65,163 @@ if (!empty($_SESSION['cart'])) {
 }
 
 // ==========================================
-// PROSES PERUBAHAN KERANJANG (POST + CSRF)
+// PROSES TOMBOL + DAN -
 // ==========================================
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cart_action'])) {
-    verify_csrf_or_abort();
+if (
+    isset($_GET['action'])
+    &&
+    isset($_GET['id'])
+) {
 
-    $action = (string) $_POST['cart_action'];
-    $id = (int) ($_POST['id'] ?? 0);
+    $action = $_GET['action'];
 
-    if ($id > 0) {
+    $id = (int) $_GET['id'];
+
+    if (
+        $id > 0
+        &&
+        isset($_SESSION['cart'][$id])
+    ) {
+
         $cekBuku = mysqli_query(
+
             $conn,
-            "SELECT id_buku, stok FROM buku WHERE id_buku='$id' LIMIT 1"
+
+            "SELECT id_buku, stok
+            FROM buku
+            WHERE id_buku='$id'
+            LIMIT 1"
+
         );
+
         $bukuCek = mysqli_fetch_assoc($cekBuku);
 
         if ($bukuCek) {
+
             $stok = (int) $bukuCek['stok'];
 
-            if ($action === 'add') {
-                if ($stok <= 0) {
-                    $_SESSION['cart_message'] = 'Maaf, stok buku sedang habis.';
-                } elseif (!isset($_SESSION['cart'][$id])) {
-                    $_SESSION['cart'][$id] = 1;
-                } elseif ($_SESSION['cart'][$id] < $stok) {
+            // ==========================
+            // TAMBAH JUMLAH
+            // ==========================
+
+            if ($action === 'plus') {
+
+                if (
+                    $_SESSION['cart'][$id] < $stok
+                ) {
+
                     $_SESSION['cart'][$id]++;
                 } else {
-                    $_SESSION['cart_message'] = 'Jumlah buku sudah mencapai stok yang tersedia.';
+
+                    $_SESSION['cart_message']
+                        =
+                        "Jumlah buku sudah mencapai stok yang tersedia.";
                 }
             }
 
-            if ($action === 'plus' && isset($_SESSION['cart'][$id])) {
-                if ($_SESSION['cart'][$id] < $stok) {
-                    $_SESSION['cart'][$id]++;
-                } else {
-                    $_SESSION['cart_message'] = 'Jumlah buku sudah mencapai stok yang tersedia.';
-                }
-            }
+            // ==========================
+            // KURANGI JUMLAH
+            // ==========================
 
-            if ($action === 'minus' && isset($_SESSION['cart'][$id])) {
+            if ($action === 'minus') {
+
                 $_SESSION['cart'][$id]--;
-                if ($_SESSION['cart'][$id] <= 0) {
-                    unset($_SESSION['cart'][$id]);
+
+                // Jika jumlah 0
+                // otomatis hapus dari cart
+
+                if (
+                    $_SESSION['cart'][$id] <= 0
+                ) {
+
+                    unset(
+                        $_SESSION['cart'][$id]
+                    );
                 }
             }
         }
     }
 
-    header('Location: keranjang.php');
+    header("location:keranjang.php");
+
+    exit;
+}
+
+// ==========================================
+// TAMBAH BUKU DARI DETAIL BUKU
+// ==========================================
+
+// Link lama tetap bisa digunakan:
+//
+// keranjang.php?id=1
+//
+// Jika buku yang sama ditambahkan lagi,
+// jumlah akan bertambah otomatis.
+
+if (
+    isset($_GET['id'])
+    &&
+    !isset($_GET['action'])
+) {
+
+    $id = (int) $_GET['id'];
+
+    if ($id > 0) {
+
+        $cekBuku = mysqli_query(
+
+            $conn,
+
+            "SELECT id_buku, stok
+            FROM buku
+            WHERE id_buku='$id'
+            LIMIT 1"
+
+        );
+
+        $bukuCek = mysqli_fetch_assoc($cekBuku);
+
+        if ($bukuCek) {
+
+            $stok = (int) $bukuCek['stok'];
+
+            if ($stok <= 0) {
+
+                $_SESSION['cart_message']
+                    =
+                    "Maaf, stok buku sedang habis.";
+            } else {
+
+                // Jika belum ada di keranjang
+
+                if (
+                    !isset($_SESSION['cart'][$id])
+                ) {
+
+                    $_SESSION['cart'][$id] = 1;
+                }
+
+                // Jika sudah ada
+                // jumlah ditambahkan
+
+                elseif (
+                    $_SESSION['cart'][$id] < $stok
+                ) {
+
+                    $_SESSION['cart'][$id]++;
+                } else {
+
+                    $_SESSION['cart_message']
+                        =
+                        "Jumlah buku sudah mencapai stok yang tersedia.";
+                }
+            }
+        }
+    }
+
+    header("location:keranjang.php");
+
     exit;
 }
 
@@ -335,12 +443,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cart_action'])) {
 
                                         <!-- KURANG -->
 
-                                        <form method="POST" action="keranjang.php" style="display:inline">
-                                            <?= csrf_input(); ?>
-                                            <input type="hidden" name="cart_action" value="minus">
-                                            <input type="hidden" name="id" value="<?= (int) $id; ?>">
-                                            <button type="submit" class="qty-btn" title="Kurangi jumlah" style="border:0;cursor:pointer;">−</button>
-                                        </form>
+                                        <a
+                                            href="keranjang.php?action=minus&id=<?= $id; ?>"
+                                            class="qty-btn"
+                                            title="Kurangi jumlah">
+
+                                            −
+
+                                        </a>
 
                                         <!-- JUMLAH -->
 
@@ -352,12 +462,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cart_action'])) {
 
                                         <!-- TAMBAH -->
 
-                                        <form method="POST" action="keranjang.php" style="display:inline">
-                                            <?= csrf_input(); ?>
-                                            <input type="hidden" name="cart_action" value="plus">
-                                            <input type="hidden" name="id" value="<?= (int) $id; ?>">
-                                            <button type="submit" class="qty-btn" title="Tambah jumlah" style="border:0;cursor:pointer;">+</button>
-                                        </form>
+                                        <a
+                                            href="keranjang.php?action=plus&id=<?= $id; ?>"
+                                            class="qty-btn"
+                                            title="Tambah jumlah">
+
+                                            +
+
+                                        </a>
 
                                     </div>
 
@@ -384,11 +496,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cart_action'])) {
 
                                 <td>
 
-                                    <form method="POST" action="hapus_cart.php" style="display:inline" onsubmit="return confirm('Hapus buku ini dari keranjang?');">
-                                        <?= csrf_input(); ?>
-                                        <input type="hidden" name="id" value="<?= (int) $id; ?>">
-                                        <button type="submit" class="action-delete" style="border:0;cursor:pointer;">Hapus</button>
-                                    </form>
+                                    <a
+
+                                        href="hapus_cart.php?id=<?= $id; ?>"
+
+                                        class="action-delete"
+
+                                        onclick="
+                            return confirm(
+                            'Hapus buku ini dari keranjang?'
+                            )
+                            ">
+
+                                        Hapus
+
+                                    </a>
 
                                 </td>
 

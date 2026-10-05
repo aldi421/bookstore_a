@@ -7,7 +7,6 @@ include "../config/koneksi.php";
 if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
 
     header("location:../login.php");
-    exit;
 }
 
 $data = mysqli_query(
@@ -112,7 +111,7 @@ $data = mysqli_query(
 
                     <td>
 
-                        <?= h($row['nama_kategori']); ?>
+                        <?= $row['nama_kategori']; ?>
 
                     </td>
 
@@ -128,11 +127,17 @@ $data = mysqli_query(
 
                         </a>
 
-                        <form method="POST" action="hapus_kategori.php" style="display:inline" onsubmit="return confirm('Yakin ingin menghapus kategori ini?');">
-                            <?= csrf_input(); ?>
-                            <input type="hidden" name="id" value="<?= (int) $row['id_kategori']; ?>">
-                            <button type="submit" class="action-delete" style="border:0;cursor:pointer;">Hapus</button>
-                        </form>
+                        <a
+
+                            href="hapus_kategori.php?id=<?= $row['id_kategori']; ?>"
+
+                            class="action-delete"
+
+                            onclick="return confirm('Yakin ingin menghapus kategori ini?')">
+
+                            Hapus
+
+                        </a>
 
                     </td>
 

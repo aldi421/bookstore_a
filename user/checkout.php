@@ -246,8 +246,6 @@ if (
     isset($_POST['checkout'])
 ) {
 
-    verify_csrf_or_abort();
-
     $metode_pembayaran
         =
         isset($_POST['metode_pembayaran'])
@@ -417,6 +415,10 @@ if (
                 =
                 (int) $item['jumlah'];
 
+            $harga_item
+                =
+                (int) $item['harga'];
+
             $query_detail
                 =
                 mysqli_query(
@@ -447,7 +449,7 @@ if (
 
                     '$jumlah',
 
-                    '" . (int) $item['harga'] . "'
+                    '$harga_item'
 
                 )"
 
@@ -664,7 +666,6 @@ if (
         ===================================== -->
 
             <form method="POST">
-                <?= csrf_input(); ?>
 
                 <label>
 

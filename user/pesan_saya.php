@@ -1,149 +1,90 @@
 <?php
 session_start();
-require '../config/koneksi.php';
-require_role('user');
+require_once '../config/koneksi.php';
+require_once '../config/helpers.php';
+lentera_require_user();
 
 $id_user = (int) ($_SESSION['id_user'] ?? 0);
-$stmt = mysqli_prepare($conn, 'SELECT * FROM pesan WHERE id_user=? ORDER BY id_pesan DESC');
-mysqli_stmt_bind_param($stmt, 'i', $id_user);
-mysqli_stmt_execute($stmt);
-$data = mysqli_stmt_get_result($stmt);
+$data = false;
+$error = '';
+
+if ($id_user <= 0) {
+    $error = 'Sesi pengguna tidak valid. Silakan login ulang.';
+} else {
+    $data = mysqli_query(
+        $conn,
+        "SELECT id_pesan, judul_pesan, isi_pesan, balasan_admin, tanggal, status
+         FROM pesan
+         WHERE id_user = $id_user
+         ORDER BY id_pesan DESC"
+    );
+    if (!$data) {
+        $error = 'Riwayat pesan belum bisa dimuat. Silakan coba lagi.';
+    }
+}
 ?>
-
 <!DOCTYPE html>
-
-<html>
-
+<html lang="id">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-
-    <title>
-
-        Pesan Saya
-
-    </title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesan Saya | LENTERA</title>
     <link rel="icon" type="image/svg+xml" href="../images/favicon.svg">
-    <link rel="stylesheet" href="../css/style.css">
-
+    <link rel="stylesheet" href="../css/style.css?v=20261005-userfix2">
 </head>
-
 <body>
+<?php include '../template/navbar.php'; ?>
 
-    <?php include "../template/navbar.php"; ?>
+<main class="content-user">
+    <span class="section-kicker">MESSAGE JOURNAL</span>
+    <h1>Pesan Saya</h1>
+    <p>Riwayat pertanyaan dan balasan dari admin LENTERA.</p>
 
-    <div class="content-user">
+    <?php if (isset($_GET['sent']) && $_GET['sent'] === '1') { ?>
+        <div class="cart-alert">Pesan berhasil dikirim ke admin.</div>
+    <?php } ?>
 
-        <h1>
+    <p style="margin:20px 0"><a class="btn" href="contact.php">+ Kirim Pesan Baru</a></p>
 
-            Pesan Saya
-
-        </h1>
-
-        <p>
-
-            Riwayat pesan dan balasan dari admin
-
-        </p>
-
+    <?php if ($error !== '') { ?>
+        <div class="cart-alert"><?= h($error); ?></div>
+    <?php } elseif ($data && mysqli_num_rows($data) === 0) { ?>
+        <div class="empty-cart">
+            <h3>Belum ada pesan</h3>
+            <p>Pesan yang kamu kirim ke admin akan muncul di sini.</p>
+        </div>
+    <?php } elseif ($data) { ?>
         <?php while ($row = mysqli_fetch_assoc($data)) { ?>
+            <article class="message-card">
+                <span class="section-kicker">MESSAGE #<?= (int) $row['id_pesan']; ?></span>
+                <h3><?= h($row['judul_pesan']); ?></h3>
 
-            <div class="message-card">
+                <p><b>Pesan Saya:</b></p>
+                <p><?= nl2br(h($row['isi_pesan'])); ?></p>
 
-                <h3>
+                <hr style="margin:22px 0;border:0;border-top:1px solid rgba(80,70,55,.14)">
 
-                    <?= h($row['judul_pesan']); ?>
-
-                </h3>
-
-                <p>
-
-                    <b>
-
-                        Pesan Saya:
-
-                    </b>
-
-                </p>
-
-                <p>
-
-                    <?= h($row['isi_pesan']); ?>
-
-                </p>
-
-                <hr>
-
-                <p>
-
-                    <b>
-
-                        Balasan Admin:
-
-                    </b>
-
-                </p>
-
-                <?php if ($row['balasan_admin'] == "") { ?>
-
-                    <p>
-
-                        <i>
-
-                            Belum ada balasan dari admin
-
-                        </i>
-
-                    </p>
-
+                <p><b>Balasan Admin:</b></p>
+                <?php if (trim((string) $row['balasan_admin']) === '') { ?>
+                    <p><i>Belum ada balasan dari admin.</i></p>
                 <?php } else { ?>
-
-                    <p>
-
-                        <?= h($row['balasan_admin']); ?>
-
-                    </p>
-
+                    <p><?= nl2br(h($row['balasan_admin'])); ?></p>
                 <?php } ?>
 
-                <div class="message-footer">
-
-                    Tanggal:
-
-                    <?= h($row['tanggal']); ?>
-
-                    <br>
-
+                <div class="message-footer" style="margin-top:20px">
+                    Tanggal: <?= h($row['tanggal']); ?><br>
                     Status:
-
-                    <?php if ($row['status'] == "Baru") { ?>
-
-                        <span class="badge-proses">
-
-                            Baru
-
-                        </span>
-
+                    <?php if (($row['status'] ?? '') === 'Baru') { ?>
+                        <span class="badge-proses">Baru</span>
                     <?php } else { ?>
-
-                        <span class="badge-selesai">
-
-                            Dibalas
-
-                        </span>
-
+                        <span class="badge-selesai"><?= h($row['status'] ?: 'Dibalas'); ?></span>
                     <?php } ?>
-
                 </div>
-
-            </div>
-
+            </article>
         <?php } ?>
+    <?php } ?>
+</main>
 
-    </div>
-
-<script src="../js/ui.js"></script>
+<script src="../js/ui.js?v=20261005-userfix2"></script>
 </body>
-
 </html>

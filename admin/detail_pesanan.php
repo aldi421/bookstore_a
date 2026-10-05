@@ -29,7 +29,7 @@ $id_pesanan = (int) $_GET['id'];
 $data = mysqli_query(
     $conn,
     "
-    SELECT
+    SELECT 
         pesanan.*,
         users.nama
     FROM pesanan

@@ -1,23 +1,38 @@
 <?php
+
 session_start();
-require '../config/koneksi.php';
-require_role('user');
 
-$id = (int) ($_GET['id'] ?? 0);
-if ($id <= 0) {
-    header('Location: katalog.php');
+include "../config/koneksi.php";
+
+if (!isset($_SESSION['role']) || $_SESSION['role'] != "user") {
+
+    header("location:../login.php");
+
     exit;
 }
 
-$stmt = mysqli_prepare($conn, 'SELECT buku.*, kategori.nama_kategori FROM buku INNER JOIN kategori ON buku.id_kategori=kategori.id_kategori WHERE id_buku=? LIMIT 1');
-mysqli_stmt_bind_param($stmt, 'i', $id);
-mysqli_stmt_execute($stmt);
-$buku = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+$id = $_GET['id'];
 
-if (!$buku) {
-    header('Location: katalog.php');
-    exit;
-}
+// mengambil data buku
+
+$data = mysqli_query(
+    $conn,
+
+    "SELECT buku.*, kategori.nama_kategori
+
+FROM buku
+
+INNER JOIN kategori
+
+ON buku.id_kategori = kategori.id_kategori
+
+WHERE id_buku='$id'
+
+"
+);
+
+$buku = mysqli_fetch_assoc($data);
+
 ?>
 
 <!DOCTYPE html>
@@ -53,7 +68,7 @@ if (!$buku) {
 
             <div class="detail-image">
 
-                <img src="../images/buku/<?= h($buku['gambar']); ?>">
+                <img src="../images/buku/<?= $buku['gambar']; ?>">
 
             </div>
 
@@ -61,7 +76,7 @@ if (!$buku) {
 
                 <h1>
 
-                    <?= h($buku['judul_buku']); ?>
+                    <?= $buku['judul_buku']; ?>
 
                 </h1>
 
@@ -69,7 +84,7 @@ if (!$buku) {
 
                     <b>Kategori :</b>
 
-                    <?= h($buku['nama_kategori']); ?>
+                    <?= $buku['nama_kategori']; ?>
 
                 </p>
 
@@ -77,7 +92,7 @@ if (!$buku) {
 
                     <b>Penulis :</b>
 
-                    <?= h($buku['penulis']); ?>
+                    <?= $buku['penulis']; ?>
 
                 </p>
 
@@ -85,7 +100,7 @@ if (!$buku) {
 
                     <b>Penerbit :</b>
 
-                    <?= h($buku['penerbit']); ?>
+                    <?= $buku['penerbit']; ?>
 
                 </p>
 
@@ -105,16 +120,15 @@ if (!$buku) {
 
                 <p>
 
-                    <?= h($buku['deskripsi']); ?>
+                    <?= $buku['deskripsi']; ?>
 
                 </p>
 
-                <form method="POST" action="keranjang.php" style="display:inline">
-                    <?= csrf_input(); ?>
-                    <input type="hidden" name="cart_action" value="add">
-                    <input type="hidden" name="id" value="<?= (int) $buku['id_buku']; ?>">
-                    <button type="submit" class="btn" style="border:0;cursor:pointer;">+ Tambah Keranjang</button>
-                </form>
+                <a href="keranjang.php?id=<?= $buku['id_buku']; ?>" class="btn">
+
+                    + Tambah Keranjang
+
+                </a>
 
             </div>
 

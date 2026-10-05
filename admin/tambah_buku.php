@@ -1,47 +1,165 @@
 <?php
-session_start();
-require '../config/koneksi.php';
-require_role('admin');
 
-$kategori = mysqli_query($conn, 'SELECT * FROM kategori ORDER BY nama_kategori ASC');
-$error = '';
+session_start();
+
+include "../config/koneksi.php";
+
+// cek login admin
+
+if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
+
+    header("location:../login.php");
+    exit;
+}
+
+// mengambil data kategori
+
+$kategori = mysqli_query(
+    $conn,
+
+    "SELECT * FROM kategori"
+
+);
+
+// proses simpan buku
 
 if (isset($_POST['simpan'])) {
-    verify_csrf_or_abort();
 
-    $id_kategori = (int) ($_POST['id_kategori'] ?? 0);
-    $judul = trim((string) ($_POST['judul_buku'] ?? ''));
-    $penulis = trim((string) ($_POST['penulis'] ?? ''));
-    $penerbit = trim((string) ($_POST['penerbit'] ?? ''));
-    $tahun = (int) ($_POST['tahun'] ?? 0);
-    $harga = (int) ($_POST['harga'] ?? 0);
-    $stok = (int) ($_POST['stok'] ?? 0);
-    $deskripsi = trim((string) ($_POST['deskripsi'] ?? ''));
+    $id_kategori = $_POST['id_kategori'];
+    $judul       = $_POST['judul_buku'];
+    $penulis     = $_POST['penulis'];
+    $penerbit    = $_POST['penerbit'];
+    $tahun       = $_POST['tahun'];
+    $harga       = $_POST['harga'];
+    $stok        = $_POST['stok'];
+    $deskripsi   = $_POST['deskripsi'];
 
-    if ($id_kategori <= 0 || $judul === '' || $penulis === '' || $harga < 0 || $stok < 0) {
-        $error = 'Data buku belum valid.';
-    } elseif (!isset($_FILES['gambar']) || ($_FILES['gambar']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
-        $error = 'Cover buku wajib diunggah.';
+    // cek kategori
+
+    if ($id_kategori == "") {
+
+        echo "
+
+        <script>
+
+        alert('Silahkan pilih kategori buku');
+
+        </script>
+
+        ";
     } else {
-        $gambar = null;
-        try {
-            $gambar = upload_book_image($_FILES['gambar'], '../images/buku');
-            $stmt = mysqli_prepare($conn, 'INSERT INTO buku (id_kategori,judul_buku,penulis,penerbit,tahun,harga,stok,gambar,deskripsi) VALUES (?,?,?,?,?,?,?,?,?)');
-            mysqli_stmt_bind_param($stmt, 'isssiiiss', $id_kategori, $judul, $penulis, $penerbit, $tahun, $harga, $stok, $gambar, $deskripsi);
-            if (!mysqli_stmt_execute($stmt)) {
-                throw new RuntimeException('Gagal menyimpan buku.');
-            }
-            header('Location: buku.php');
-            exit;
-        } catch (Throwable $e) {
-            if ($gambar) {
-                $path = '../images/buku/' . basename($gambar);
-                if (is_file($path)) @unlink($path);
-            }
-            $error = $e->getMessage();
+
+        // upload gambar
+
+        $gambar = $_FILES['gambar']['name'];
+
+        $tmp = $_FILES['gambar']['tmp_name'];
+
+        // folder penyimpanan
+
+        $folder = "../images/buku/";
+
+        // buat folder otomatis
+
+        if (!is_dir($folder)) {
+
+            mkdir($folder, 0777, true);
+        }
+
+        // pindahkan gambar
+
+        move_uploaded_file(
+
+            $tmp,
+
+            $folder . $gambar
+
+        );
+
+        // simpan data ke database
+
+        $query = mysqli_query(
+            $conn,
+
+            "INSERT INTO buku
+
+        (
+
+        id_kategori,
+
+        judul_buku,
+
+        penulis,
+
+        penerbit,
+
+        tahun,
+
+        harga,
+
+        stok,
+
+        gambar,
+
+        deskripsi
+
+        )
+
+VALUES
+
+(
+
+        '$id_kategori',
+
+        '$judul',
+
+        '$penulis',
+
+        '$penerbit',
+
+        '$tahun',
+
+        '$harga',
+
+        '$stok',
+
+        '$gambar',
+
+        '$deskripsi'
+
+        )
+
+        "
+        );
+
+        if ($query) {
+
+            echo "
+
+            <script>
+
+            alert('Data buku berhasil ditambahkan');
+
+            window.location='buku.php';
+
+            </script>
+
+            ";
+        } else {
+
+            echo "
+
+            <script>
+
+            alert('Gagal menyimpan data : " . mysqli_error($conn) . "');
+
+            </script>
+
+            ";
         }
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -88,7 +206,6 @@ if (isset($_POST['simpan'])) {
         <div class="form-admin">
 
             <form method="POST" enctype="multipart/form-data">
-                <?= csrf_input(); ?>
 
                 <label>
 
@@ -108,7 +225,7 @@ if (isset($_POST['simpan'])) {
 
                         <option value="<?= $k['id_kategori']; ?>">
 
-                            <?= h($k['nama_kategori']); ?>
+                            <?= $k['nama_kategori']; ?>
 
                         </option>
 

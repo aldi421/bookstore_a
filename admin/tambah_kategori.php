@@ -1,25 +1,47 @@
 <?php
+
 session_start();
-require '../config/koneksi.php';
-require_role('admin');
 
-$error = '';
+include "../config/koneksi.php";
+
+if ($_SESSION['role'] != "admin") {
+
+    header("location:../login.php");
+}
+
 if (isset($_POST['simpan'])) {
-    verify_csrf_or_abort();
-    $nama_kategori = trim((string) ($_POST['nama_kategori'] ?? ''));
 
-    if ($nama_kategori === '') {
-        $error = 'Nama kategori wajib diisi.';
-    } else {
-        $stmt = mysqli_prepare($conn, 'INSERT INTO kategori (nama_kategori) VALUES (?)');
-        mysqli_stmt_bind_param($stmt, 's', $nama_kategori);
-        if (mysqli_stmt_execute($stmt)) {
-            header('Location: kategori.php');
-            exit;
-        }
-        $error = 'Kategori gagal ditambahkan.';
+    $nama_kategori = $_POST['nama_kategori'];
+
+    $query = mysqli_query(
+        $conn,
+
+        "INSERT INTO kategori
+
+(nama_kategori)
+
+VALUES
+
+('$nama_kategori')"
+
+    );
+
+    if ($query) {
+
+        echo "
+
+<script>
+
+alert('Kategori berhasil ditambahkan');
+
+window.location='kategori.php';
+
+</script>
+
+";
     }
 }
+
 ?>
 <!DOCTYPE html>
 
@@ -57,7 +79,6 @@ if (isset($_POST['simpan'])) {
         <div class="form-admin">
 
             <form method="POST">
-                <?= csrf_input(); ?>
 
                 <label>
 

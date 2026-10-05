@@ -1,22 +1,15 @@
-# Database credentials (local + hosting)
-config/database.php
-
-# Environment / secret files
+# LENTERA bookstore
 .env
 .env.*
-*.local.php
-
-# Runtime / logs
+!.env.example
 *.log
-logs/
-tmp/
-
-# IDE / OS
-.vscode/
-.idea/
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/
 
-# Dependencies if added later
-/vendor/
-/node_modules/
+# Local/server generated files
+error_log
+php_error.log
+*.tmp
+*.bak

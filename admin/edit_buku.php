@@ -1,72 +1,127 @@
 <?php
+
 session_start();
-require '../config/koneksi.php';
-require_role('admin');
 
-$id = (int) ($_GET['id'] ?? 0);
-if ($id <= 0) {
-    header('Location: buku.php');
+include "../config/koneksi.php";
+
+if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
+
+    header("location:../login.php");
+
     exit;
 }
 
-$stmt = mysqli_prepare($conn, 'SELECT * FROM buku WHERE id_buku=? LIMIT 1');
-mysqli_stmt_bind_param($stmt, 'i', $id);
-mysqli_stmt_execute($stmt);
-$buku = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
-if (!$buku) {
-    header('Location: buku.php');
-    exit;
-}
+$id = $_GET['id'];
 
-$kategori = mysqli_query($conn, 'SELECT * FROM kategori ORDER BY nama_kategori ASC');
-$error = '';
+// mengambil data buku
+
+$data = mysqli_query(
+    $conn,
+
+    "SELECT * FROM buku
+
+WHERE id_buku='$id'
+
+"
+);
+
+$buku = mysqli_fetch_assoc($data);
+
+// mengambil kategori
+
+$kategori = mysqli_query(
+    $conn,
+
+    "SELECT * FROM kategori"
+
+);
+
+// proses update
 
 if (isset($_POST['update'])) {
-    verify_csrf_or_abort();
 
-    $id_kategori = (int) ($_POST['id_kategori'] ?? 0);
-    $judul = trim((string) ($_POST['judul_buku'] ?? ''));
-    $penulis = trim((string) ($_POST['penulis'] ?? ''));
-    $penerbit = trim((string) ($_POST['penerbit'] ?? ''));
-    $tahun = (int) ($_POST['tahun'] ?? 0);
-    $harga = (int) ($_POST['harga'] ?? 0);
-    $stok = (int) ($_POST['stok'] ?? 0);
-    $deskripsi = trim((string) ($_POST['deskripsi'] ?? ''));
-    $gambar = (string) $buku['gambar'];
-    $gambarBaru = null;
+    $id_kategori = $_POST['id_kategori'];
 
-    if ($id_kategori <= 0 || $judul === '' || $penulis === '' || $harga < 0 || $stok < 0) {
-        $error = 'Data buku belum valid.';
+    $judul = $_POST['judul_buku'];
+
+    $penulis = $_POST['penulis'];
+
+    $penerbit = $_POST['penerbit'];
+
+    $tahun = $_POST['tahun'];
+
+    $harga = $_POST['harga'];
+
+    $stok = $_POST['stok'];
+
+    $deskripsi = $_POST['deskripsi'];
+
+    // cek apakah upload gambar baru
+
+    if ($_FILES['gambar']['name'] != "") {
+
+        $gambar = $_FILES['gambar']['name'];
+
+        $tmp = $_FILES['gambar']['tmp_name'];
+
+        $folder = "../images/buku/";
+
+        move_uploaded_file(
+
+            $tmp,
+
+            $folder . $gambar
+
+        );
     } else {
-        try {
-            if (isset($_FILES['gambar']) && ($_FILES['gambar']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
-                $gambarBaru = upload_book_image($_FILES['gambar'], '../images/buku');
-                $gambar = $gambarBaru;
-            }
 
-            $update = mysqli_prepare($conn, 'UPDATE buku SET id_kategori=?, judul_buku=?, penulis=?, penerbit=?, tahun=?, harga=?, stok=?, gambar=?, deskripsi=? WHERE id_buku=?');
-            mysqli_stmt_bind_param($update, 'isssiiissi', $id_kategori, $judul, $penulis, $penerbit, $tahun, $harga, $stok, $gambar, $deskripsi, $id);
+        $gambar = $buku['gambar'];
+    }
 
-            if (!mysqli_stmt_execute($update)) {
-                throw new RuntimeException('Gagal memperbarui data buku.');
-            }
+    $query = mysqli_query(
+        $conn,
 
-            if ($gambarBaru !== null && !empty($buku['gambar'])) {
-                $old = '../images/buku/' . basename((string) $buku['gambar']);
-                if (is_file($old)) @unlink($old);
-            }
+        "UPDATE buku SET
 
-            header('Location: buku.php');
-            exit;
-        } catch (Throwable $e) {
-            if ($gambarBaru !== null) {
-                $newPath = '../images/buku/' . basename($gambarBaru);
-                if (is_file($newPath)) @unlink($newPath);
-            }
-            $error = $e->getMessage();
-        }
+id_kategori='$id_kategori',
+
+judul_buku='$judul',
+
+penulis='$penulis',
+
+penerbit='$penerbit',
+
+tahun='$tahun',
+
+harga='$harga',
+
+stok='$stok',
+
+gambar='$gambar',
+
+deskripsi='$deskripsi'
+
+WHERE id_buku='$id'
+
+"
+    );
+
+    if ($query) {
+
+        echo "
+
+<script>
+
+alert('Data buku berhasil diperbarui');
+
+window.location='buku.php';
+
+</script>
+
+";
     }
 }
+
 ?>
 <!DOCTYPE html>
 
@@ -98,7 +153,6 @@ if (isset($_POST['update'])) {
         <div class="form-admin">
 
             <form method="POST" enctype="multipart/form-data">
-                <?= csrf_input(); ?>
 
                 <label>
 
@@ -116,7 +170,7 @@ if (isset($_POST['update'])) {
 
                             <?= ($k['id_kategori'] == $buku['id_kategori']) ? 'selected' : ''; ?>>
 
-                            <?= h($k['nama_kategori']); ?>
+                            <?= $k['nama_kategori']; ?>
 
                         </option>
 
@@ -136,7 +190,7 @@ if (isset($_POST['update'])) {
 
                     name="judul_buku"
 
-                    value="<?= h($buku['judul_buku']); ?>">
+                    value="<?= $buku['judul_buku']; ?>">
 
                 <label>
 
@@ -150,7 +204,7 @@ if (isset($_POST['update'])) {
 
                     name="penulis"
 
-                    value="<?= h($buku['penulis']); ?>">
+                    value="<?= $buku['penulis']; ?>">
 
                 <label>
 
@@ -164,7 +218,7 @@ if (isset($_POST['update'])) {
 
                     name="penerbit"
 
-                    value="<?= h($buku['penerbit']); ?>">
+                    value="<?= $buku['penerbit']; ?>">
 
                 <label>
 
@@ -218,7 +272,7 @@ if (isset($_POST['update'])) {
 
                     name="deskripsi">
 
-<?= h($buku['deskripsi']); ?>
+<?= $buku['deskripsi']; ?>
 
 </textarea>
 
@@ -230,7 +284,7 @@ if (isset($_POST['update'])) {
 
                 <br>
 
-                <img src="../images/buku/<?= h($buku['gambar']); ?>"
+                <img src="../images/buku/<?= $buku['gambar']; ?>"
 
                     width="100">
 
