@@ -1,0 +1,9 @@
+Options -Indexes
+
+<FilesMatch "(?i)\.(sql|log|ini|env|bak)$">
+    Require all denied
+</FilesMatch>
+
+<Files "database.php">
+    Require all denied
+</Files>

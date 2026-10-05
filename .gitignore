@@ -1,0 +1,22 @@
+# Database credentials (local + hosting)
+config/database.php
+
+# Environment / secret files
+.env
+.env.*
+*.local.php
+
+# Runtime / logs
+*.log
+logs/
+tmp/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Dependencies if added later
+/vendor/
+/node_modules/
