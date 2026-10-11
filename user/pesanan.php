@@ -31,6 +31,7 @@ ORDER BY id_pesanan DESC
 <html>
 
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
         Pesanan Saya
@@ -165,6 +166,7 @@ ORDER BY id_pesanan DESC
     </div>
 
 <script src="../js/ui.js"></script>
+<?php include "../template/footer.php"; ?>
 </body>
 
 </html>

@@ -524,7 +524,7 @@ if (
 
     <title>
 
-        Checkout RUANG BACA
+        Checkout LENTERA
 
     </title>
 
@@ -775,7 +775,7 @@ if (
 
                         <b>
 
-                            RUANG BACA Indonesia
+                            LENTERA Indonesia
 
                         </b>
 
@@ -845,6 +845,7 @@ if (
     </div>
 
 <script src="../js/ui.js"></script>
+<?php include "../template/footer.php"; ?>
 </body>
 
 </html>

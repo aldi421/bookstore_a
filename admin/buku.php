@@ -37,6 +37,7 @@ ORDER BY id_buku DESC"
 <html>
 
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
 
@@ -66,7 +67,7 @@ ORDER BY id_buku DESC"
 
         <p>
 
-            Kelola seluruh koleksi buku pada RUANG BACA
+            Kelola seluruh koleksi buku pada LENTERA
 
         </p>
 

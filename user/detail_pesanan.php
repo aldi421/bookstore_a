@@ -95,6 +95,7 @@ WHERE detail_pesanan.id_pesanan='$id_pesanan'
 <html>
 
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
 
@@ -211,6 +212,7 @@ WHERE detail_pesanan.id_pesanan='$id_pesanan'
     </div>
 
 <script src="../js/ui.js"></script>
+<?php include "../template/footer.php"; ?>
 </body>
 
 </html>

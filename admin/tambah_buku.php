@@ -167,6 +167,7 @@ VALUES
 <html>
 
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
 
@@ -196,7 +197,7 @@ VALUES
 
         <p>
 
-            Tambahkan koleksi buku baru ke RUANG BACA
+            Tambahkan koleksi buku baru ke LENTERA
 
         </p>
 

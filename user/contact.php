@@ -87,6 +87,7 @@ VALUES
 <html>
 
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
 
@@ -114,7 +115,7 @@ VALUES
 
             <p>
 
-                Silahkan kirim pertanyaan atau informasi kepada admin RUANG BACA.
+                Silahkan kirim pertanyaan atau informasi kepada admin LENTERA.
 
             </p>
 
@@ -173,6 +174,7 @@ VALUES
     </div>
 
 <script src="../js/ui.js"></script>
+<?php include "../template/footer.php"; ?>
 </body>
 
 </html>

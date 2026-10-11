@@ -23,6 +23,7 @@ $data = mysqli_query(
 <html>
 
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
 
@@ -52,7 +53,7 @@ $data = mysqli_query(
 
         <p>
 
-            Kelola kategori buku pada aplikasi RUANG BACA
+            Kelola kategori buku pada aplikasi LENTERA
 
         </p>
 

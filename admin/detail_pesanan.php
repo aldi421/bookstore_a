@@ -123,7 +123,7 @@ function statusClass($status)
     >
 
     <title>
-        Detail Pesanan #<?= $id_pesanan; ?> | RUANG BACA
+        Detail Pesanan #<?= $id_pesanan; ?> | LENTERA
     </title>
 
     <!-- CSS utama project -->
@@ -158,7 +158,7 @@ function statusClass($status)
             display: block;
             margin-bottom: 7px;
 
-            color: #9a7340;
+            color: #B08D57;
 
             font-size: 11px;
             font-weight: 700;
@@ -169,7 +169,7 @@ function statusClass($status)
         .order-detail-heading h1 {
             margin: 0;
 
-            color: #57201f;
+            color: #17372C;
 
             font-family: Georgia, "Times New Roman", serif;
             font-size: clamp(30px, 3vw, 44px);
@@ -202,7 +202,7 @@ function statusClass($status)
             border-radius: 8px;
 
             background: #fffaf0;
-            color: #57201f;
+            color: #17372C;
 
             font-size: 13px;
             font-weight: 700;
@@ -584,7 +584,7 @@ function statusClass($status)
 
             border-radius: 8px;
 
-            background: #682a28;
+            background: #214638;
             color: #fff9ef;
 
             font-size: 12px;
@@ -602,7 +602,7 @@ function statusClass($status)
         .order-primary-back:hover {
             transform: translateY(-2px);
 
-            background: #54201f;
+            background: #17372C;
 
             box-shadow: 0 10px 23px rgba(104, 42, 40, .22);
         }

@@ -649,6 +649,7 @@ if (
     </div>
 
 <script src="../js/ui.js"></script>
+<?php include "../template/footer.php"; ?>
 </body>
 
 </html>
