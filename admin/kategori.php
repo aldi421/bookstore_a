@@ -1,0 +1,156 @@
+<?php
+
+session_start();
+
+include "../config/koneksi.php";
+
+if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
+
+    header("location:../login.php");
+}
+
+$data = mysqli_query(
+    $conn,
+
+    "SELECT * FROM kategori"
+
+);
+
+?>
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <title>
+
+        Kategori Buku
+
+    </title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+</head>
+
+<body>
+
+    <?php
+
+    include "../template/sidebar.php";
+
+    ?>
+
+    <div class="content">
+
+        <h1>
+
+            Kategori Buku
+
+        </h1>
+
+        <p>
+
+            Kelola kategori buku pada aplikasi RUANG BACA
+
+        </p>
+
+        <br>
+
+        <a href="tambah_kategori.php" class="btn">
+
+            + Tambah Kategori
+
+        </a>
+
+        <br><br>
+
+        <table width="100%">
+
+            <tr>
+
+                <th>
+
+                    No
+
+                </th>
+
+                <th>
+
+                    Nama Kategori
+
+                </th>
+
+                <th>
+
+                    Aksi
+
+                </th>
+
+            </tr>
+
+            <?php
+
+            $no = 1;
+
+            while ($row = mysqli_fetch_assoc($data)) {
+
+            ?>
+
+                <tr>
+
+                    <td>
+
+                        <?= $no++; ?>
+
+                    </td>
+
+                    <td>
+
+                        <?= $row['nama_kategori']; ?>
+
+                    </td>
+
+                    <td>
+
+                        <a
+
+                            href="edit_kategori.php?id=<?= $row['id_kategori']; ?>"
+
+                            class="action-edit">
+
+                            Edit
+
+                        </a>
+
+                        <a
+
+                            href="hapus_kategori.php?id=<?= $row['id_kategori']; ?>"
+
+                            class="action-delete"
+
+                            onclick="return confirm('Yakin ingin menghapus kategori ini?')">
+
+                            Hapus
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+            <?php
+
+            }
+
+            ?>
+
+        </table>
+
+    </div>
+
+<script src="../js/ui.js"></script>
+</body>
+
+</html>
