@@ -1,17 +1,787 @@
 <?php
 session_start();
 include 'config/koneksi.php';
-$kategori = mysqli_query($conn, "SELECT * FROM kategori ORDER BY nama_kategori ASC");
-$buku_unggulan = mysqli_query($conn, "SELECT buku.*, kategori.nama_kategori FROM buku LEFT JOIN kategori ON buku.id_kategori=kategori.id_kategori ORDER BY buku.id_buku DESC LIMIT 8");
-$buku_hero = mysqli_query($conn, "SELECT id_buku, judul_buku, gambar FROM buku WHERE gambar IS NOT NULL AND gambar <> '' ORDER BY id_buku DESC LIMIT 3");
-$heroBooks = []; if ($buku_hero) { while($bk=mysqli_fetch_assoc($buku_hero)){ $heroBooks[]=$bk; } }
-$isUser = ($_SESSION['role']??'')==='user';
+
+$kategori = mysqli_query(
+    $conn,
+    "SELECT * FROM kategori ORDER BY nama_kategori ASC"
+);
+
+$buku_unggulan = mysqli_query(
+    $conn,
+    "SELECT buku.*, kategori.nama_kategori
+     FROM buku
+     LEFT JOIN kategori ON buku.id_kategori = kategori.id_kategori
+     ORDER BY buku.id_buku DESC
+     LIMIT 8"
+);
+
+$buku_hero = mysqli_query(
+    $conn,
+    "SELECT id_buku, judul_buku, gambar
+     FROM buku
+     WHERE gambar IS NOT NULL
+     AND gambar <> ''
+     ORDER BY id_buku DESC
+     LIMIT 3"
+);
+
+$heroBooks = [];
+
+if ($buku_hero) {
+    while ($bk = mysqli_fetch_assoc($buku_hero)) {
+        $heroBooks[] = $bk;
+    }
+}
+
+$isUser = ($_SESSION['role'] ?? '') === 'user';
 ?>
-<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#17372C"><meta name="description" content="LENTERA — ruang digital untuk menemukan buku pilihan dan cerita bermakna."><title>LENTERA — Books &amp; Stories</title><link rel="stylesheet" href="css/style.css"></head><body>
-<nav class="navbar" aria-label="Navigasi utama"><a class="logo" href="index.php"><span class="logo-mark">L</span><span>LENTERA<small>BOOKS &amp; STORIES</small></span></a><button class="mobile-nav-toggle" aria-label="Buka navigasi" aria-controls="main-menu" aria-expanded="false" type="button"><span></span><span></span><span></span></button><ul class="nav-menu" id="main-menu"><li><a class="active" href="index.php">Beranda</a></li><li><a href="katalog.php">Koleksi</a></li><li><a href="tentang.php">Tentang</a></li><?php if(isset($_SESSION['role'])): ?><li><a href="<?= $_SESSION['role']==='admin'?'admin/index.php':'user/index.php' ?>">Dashboard</a></li><?php if($isUser): ?><li><a href="user/keranjang.php">Keranjang</a></li><?php endif; ?><li><a class="nav-cta" href="logout.php">Keluar</a></li><?php else: ?><li><a href="login.php">Masuk</a></li><li><a class="nav-cta" href="register.php">Daftar</a></li><?php endif; ?></ul></nav>
-<header class="hero vintage-hero"><div class="hero-inner"><p class="eyebrow"><span class="eyebrow-line"></span> CURATED BOOKSTORE <span class="eyebrow-dot">✦</span> EST. 2026</p><h1>Menerangi<br>setiap <em>halaman.</em></h1><p class="hero-copy">Temukan buku pilihan, cerita bermakna, dan pengetahuan baru dalam satu ruang digital.</p><div class="hero-actions"><a href="katalog.php" class="btn">Jelajahi Koleksi <span aria-hidden="true">↗</span></a><a href="#koleksi" class="text-link">Pilihan Terbaru <span aria-hidden="true">↗</span></a></div><p class="hero-footnote">01 / SEBUAH CERITA SELALU DIMULAI DARI HALAMAN PERTAMA</p></div><div class="hero-art" aria-label="Sampul buku dari koleksi LENTERA"><div class="hero-art-halo"></div><span class="hero-art-label">THE READING CORNER · 2026</span><?php if($heroBooks): foreach($heroBooks as $i=>$bk): ?><a class="hero-cover hero-cover-<?= $i+1 ?>" href="<?= $isUser?'user/detail_buku.php?id='.(int)$bk['id_buku']:'login.php' ?>" aria-label="Lihat <?= htmlspecialchars($bk['judul_buku'],ENT_QUOTES,'UTF-8') ?>"><img src="images/buku/<?= rawurlencode($bk['gambar']) ?>" alt="<?= htmlspecialchars($bk['judul_buku'],ENT_QUOTES,'UTF-8') ?>"></a><?php endforeach; else: ?><div class="hero-empty-art">L<br><span>BOOKS &amp; STORIES</span></div><?php endif; ?><span class="hero-art-stamp">READ<br>MORE<br>✦</span></div></header>
-<main><section class="home-intro"><span>01 / DISCOVER</span><p>Setiap buku adalah pintu menuju dunia baru. <em>Temukan kisah yang akan tinggal bersamamu.</em></p><span>READ • DISCOVER • GROW</span></section>
-<section class="home-section" id="koleksi"><div class="section-heading"><div><span class="section-kicker">CURATED COLLECTION / 02</span><h2>Pilihan Minggu Ini<span class="heading-star">✳</span></h2><p class="section-description">Dikurasi dari buku-buku terbaru dalam koleksi kami.</p></div><a class="text-link" href="katalog.php">Lihat Semua Buku ↗</a></div><div class="book-container home-books"><?php if($buku_unggulan && mysqli_num_rows($buku_unggulan)>0): while($row=mysqli_fetch_assoc($buku_unggulan)): $url=$isUser?'user/detail_buku.php?id='.(int)$row['id_buku']:'login.php'; ?><article class="book-card"><a class="cover-wrap" href="<?= $url ?>"><img loading="lazy" src="images/buku/<?= rawurlencode($row['gambar']??'') ?>" alt="Sampul <?= htmlspecialchars($row['judul_buku'],ENT_QUOTES,'UTF-8') ?>"></a><div class="book-meta"><span class="book-category"><?= htmlspecialchars($row['nama_kategori']??'Koleksi',ENT_QUOTES,'UTF-8') ?></span><h3><a href="<?= $url ?>"><?= htmlspecialchars($row['judul_buku'],ENT_QUOTES,'UTF-8') ?></a></h3><p class="author"><?= htmlspecialchars($row['penulis']??'',ENT_QUOTES,'UTF-8') ?></p><p class="book-stock"><?= (int)$row['stok']>0?'Tersedia · '.(int)$row['stok'].' stok':'Stok habis' ?></p><div class="book-bottom"><strong>Rp <?= number_format((float)$row['harga'],0,',','.') ?></strong><a class="mini-link" href="<?= $url ?>">Detail ↗</a></div></div></article><?php endwhile; else: ?><div class="empty-state"><span>✧</span><h3>Belum ada buku.</h3><p>Koleksi pertama LENTERA akan tampil di sini.</p></div><?php endif; ?></div></section>
-<section class="category-band"><div class="home-section"><div class="section-heading light"><div><span class="section-kicker">EXPLORE THE SHELVES / 03</span><h2>Temukan genre favoritmu.</h2></div><p>Jelajahi bacaan sesuai minat dan rasa ingin tahumu.</p></div><div class="category-container"><?php if($kategori && mysqli_num_rows($kategori)>0): while($k=mysqli_fetch_assoc($kategori)): ?><a class="category-card" href="katalog.php?kategori=<?= (int)$k['id_kategori'] ?>"><span aria-hidden="true">✳</span><h3><?= htmlspecialchars($k['nama_kategori'],ENT_QUOTES,'UTF-8') ?></h3><p>Telusuri koleksi</p><b>Lihat Kategori ↗</b></a><?php endwhile; else: ?><p class="category-empty">Kategori akan tampil setelah tersedia dalam database.</p><?php endif; ?></div></div></section>
-<section class="manifesto"><span class="section-kicker">A LITTLE REMINDER</span><span class="ornament">✦</span><p>“Buku yang baik tidak hanya selesai dibaca.<br><em>Ia tinggal bersama kita.</em>”</p><small>— LENTERA / BOOKS &amp; STORIES</small><a class="btn" href="katalog.php">Mulai Membaca ↗</a></section></main>
-<footer class="site-footer"><div class="footer-brand"><a href="index.php"><b>LENTERA</b><small>BOOKS &amp; STORIES</small></a><p>Temukan Buku. Nyalakan Inspirasi.</p></div><div class="footer-links"><a href="index.php">Beranda</a><a href="katalog.php">Koleksi</a><a href="tentang.php">Tentang</a><a href="login.php">Masuk</a></div><p class="footer-copyright">© 2026 LENTERA · Books &amp; Stories</p></footer><script src="js/ui.js" defer></script></body></html>
+
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#17372C"
+    >
+
+    <meta
+        name="description"
+        content="LENTERA — ruang digital untuk menemukan buku pilihan dan cerita bermakna."
+    >
+
+    <title>
+        LENTERA — Books &amp; Stories
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+         NAVBAR
+         ===================================================== -->
+
+    <nav
+        class="navbar"
+        aria-label="Navigasi utama"
+    >
+
+        <a
+            class="logo"
+            href="index.php"
+        >
+            <span class="logo-mark">
+                L
+            </span>
+
+            <span>
+                LENTERA
+                <small>
+                    BOOKS &amp; STORIES
+                </small>
+            </span>
+        </a>
+
+
+        <button
+            class="mobile-nav-toggle"
+            aria-label="Buka navigasi"
+            aria-controls="main-menu"
+            aria-expanded="false"
+            type="button"
+        >
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+
+        <ul
+            class="nav-menu"
+            id="main-menu"
+        >
+
+            <li>
+                <a
+                    class="active"
+                    href="index.php"
+                >
+                    Beranda
+                </a>
+            </li>
+
+
+            <li>
+                <a href="katalog.php">
+                    Koleksi
+                </a>
+            </li>
+
+
+            <li>
+                <a href="tentang.php">
+                    Tentang
+                </a>
+            </li>
+
+
+            <!-- PORTOFOLIO - SELALU TAMPIL -->
+            <li>
+                <a
+                    href="https://aldev-portfolio-two.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="nav-portfolio"
+                    aria-label="Buka Portofolio Saya di tab baru"
+                >
+                    <span>
+                        Portofolio Saya
+                    </span>
+
+                    <span
+                        class="portfolio-arrow"
+                        aria-hidden="true"
+                    >
+                        ↗
+                    </span>
+                </a>
+            </li>
+
+
+            <?php if (isset($_SESSION['role'])): ?>
+
+                <li>
+                    <a
+                        href="<?= $_SESSION['role'] === 'admin'
+                            ? 'admin/index.php'
+                            : 'user/index.php' ?>"
+                    >
+                        Dashboard
+                    </a>
+                </li>
+
+
+                <?php if ($isUser): ?>
+
+                    <li>
+                        <a href="user/keranjang.php">
+                            Keranjang
+                        </a>
+                    </li>
+
+                <?php endif; ?>
+
+
+                <li>
+                    <a
+                        class="nav-cta"
+                        href="logout.php"
+                    >
+                        Keluar
+                    </a>
+                </li>
+
+
+            <?php else: ?>
+
+                <li>
+                    <a href="login.php">
+                        Masuk
+                    </a>
+                </li>
+
+                <li>
+                    <a
+                        class="nav-cta"
+                        href="register.php"
+                    >
+                        Daftar
+                    </a>
+                </li>
+
+            <?php endif; ?>
+
+        </ul>
+
+    </nav>
+
+
+    <!-- =====================================================
+         HERO
+         ===================================================== -->
+
+    <header class="hero vintage-hero">
+
+        <div class="hero-inner">
+
+            <p class="eyebrow">
+                <span class="eyebrow-line"></span>
+
+                CURATED BOOKSTORE
+
+                <span class="eyebrow-dot">
+                    ✦
+                </span>
+
+                EST. 2026
+            </p>
+
+
+            <h1>
+                Menerangi<br>
+                setiap <em>halaman.</em>
+            </h1>
+
+
+            <p class="hero-copy">
+                Temukan buku pilihan, cerita bermakna,
+                dan pengetahuan baru dalam satu ruang digital.
+            </p>
+
+
+            <div class="hero-actions">
+
+                <a
+                    href="katalog.php"
+                    class="btn"
+                >
+                    Jelajahi Koleksi
+                    <span aria-hidden="true">
+                        ↗
+                    </span>
+                </a>
+
+
+                <a
+                    href="#koleksi"
+                    class="text-link"
+                >
+                    Pilihan Terbaru
+                    <span aria-hidden="true">
+                        ↗
+                    </span>
+                </a>
+
+            </div>
+
+
+            <p class="hero-footnote">
+                01 / SEBUAH CERITA SELALU DIMULAI DARI HALAMAN PERTAMA
+            </p>
+
+        </div>
+
+
+        <div
+            class="hero-art"
+            aria-label="Sampul buku dari koleksi LENTERA"
+        >
+
+            <div class="hero-art-halo"></div>
+
+
+            <span class="hero-art-label">
+                THE READING CORNER · 2026
+            </span>
+
+
+            <?php if ($heroBooks): ?>
+
+                <?php foreach ($heroBooks as $i => $bk): ?>
+
+                    <a
+                        class="hero-cover hero-cover-<?= $i + 1 ?>"
+                        href="<?= $isUser
+                            ? 'user/detail_buku.php?id=' . (int) $bk['id_buku']
+                            : 'login.php' ?>"
+                        aria-label="Lihat <?= htmlspecialchars(
+                            $bk['judul_buku'],
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>"
+                    >
+
+                        <img
+                            src="images/buku/<?= rawurlencode($bk['gambar']) ?>"
+                            alt="<?= htmlspecialchars(
+                                $bk['judul_buku'],
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ) ?>"
+                        >
+
+                    </a>
+
+                <?php endforeach; ?>
+
+
+            <?php else: ?>
+
+                <div class="hero-empty-art">
+                    L
+                    <br>
+
+                    <span>
+                        BOOKS &amp; STORIES
+                    </span>
+                </div>
+
+            <?php endif; ?>
+
+
+            <span class="hero-art-stamp">
+                READ
+                <br>
+                MORE
+                <br>
+                ✦
+            </span>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         MAIN
+         ===================================================== -->
+
+    <main>
+
+
+        <section class="home-intro">
+
+            <span>
+                01 / DISCOVER
+            </span>
+
+
+            <p>
+                Setiap buku adalah pintu menuju dunia baru.
+                <em>
+                    Temukan kisah yang akan tinggal bersamamu.
+                </em>
+            </p>
+
+
+            <span>
+                READ • DISCOVER • GROW
+            </span>
+
+        </section>
+
+
+        <!-- KOLEKSI -->
+
+        <section
+            class="home-section"
+            id="koleksi"
+        >
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="section-kicker">
+                        CURATED COLLECTION / 02
+                    </span>
+
+
+                    <h2>
+                        Pilihan Minggu Ini
+                        <span class="heading-star">
+                            ✳
+                        </span>
+                    </h2>
+
+
+                    <p class="section-description">
+                        Dikurasi dari buku-buku terbaru dalam koleksi kami.
+                    </p>
+
+                </div>
+
+
+                <a
+                    class="text-link"
+                    href="katalog.php"
+                >
+                    Lihat Semua Buku ↗
+                </a>
+
+            </div>
+
+
+            <div class="book-container home-books">
+
+
+                <?php if (
+                    $buku_unggulan &&
+                    mysqli_num_rows($buku_unggulan) > 0
+                ): ?>
+
+
+                    <?php while (
+                        $row = mysqli_fetch_assoc($buku_unggulan)
+                    ):
+
+                        $url = $isUser
+                            ? 'user/detail_buku.php?id=' . (int) $row['id_buku']
+                            : 'login.php';
+
+                    ?>
+
+
+                        <article class="book-card">
+
+                            <a
+                                class="cover-wrap"
+                                href="<?= $url ?>"
+                            >
+
+                                <img
+                                    loading="lazy"
+                                    src="images/buku/<?= rawurlencode(
+                                        $row['gambar'] ?? ''
+                                    ) ?>"
+                                    alt="Sampul <?= htmlspecialchars(
+                                        $row['judul_buku'],
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ) ?>"
+                                >
+
+                            </a>
+
+
+                            <div class="book-meta">
+
+
+                                <span class="book-category">
+
+                                    <?= htmlspecialchars(
+                                        $row['nama_kategori'] ?? 'Koleksi',
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ) ?>
+
+                                </span>
+
+
+                                <h3>
+
+                                    <a href="<?= $url ?>">
+
+                                        <?= htmlspecialchars(
+                                            $row['judul_buku'],
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ) ?>
+
+                                    </a>
+
+                                </h3>
+
+
+                                <p class="author">
+
+                                    <?= htmlspecialchars(
+                                        $row['penulis'] ?? '',
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ) ?>
+
+                                </p>
+
+
+                                <p class="book-stock">
+
+                                    <?= (int) $row['stok'] > 0
+                                        ? 'Tersedia · ' .
+                                            (int) $row['stok'] .
+                                            ' stok'
+                                        : 'Stok habis' ?>
+
+                                </p>
+
+
+                                <div class="book-bottom">
+
+                                    <strong>
+
+                                        Rp
+                                        <?= number_format(
+                                            (float) $row['harga'],
+                                            0,
+                                            ',',
+                                            '.'
+                                        ) ?>
+
+                                    </strong>
+
+
+                                    <a
+                                        class="mini-link"
+                                        href="<?= $url ?>"
+                                    >
+                                        Detail ↗
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </article>
+
+
+                    <?php endwhile; ?>
+
+
+                <?php else: ?>
+
+
+                    <div class="empty-state">
+
+                        <span>
+                            ✧
+                        </span>
+
+                        <h3>
+                            Belum ada buku.
+                        </h3>
+
+                        <p>
+                            Koleksi pertama LENTERA akan tampil di sini.
+                        </p>
+
+                    </div>
+
+
+                <?php endif; ?>
+
+
+            </div>
+
+        </section>
+
+
+        <!-- CATEGORY -->
+
+        <section class="category-band">
+
+            <div class="home-section">
+
+
+                <div class="section-heading light">
+
+                    <div>
+
+                        <span class="section-kicker">
+                            EXPLORE THE SHELVES / 03
+                        </span>
+
+                        <h2>
+                            Temukan genre favoritmu.
+                        </h2>
+
+                    </div>
+
+
+                    <p>
+                        Jelajahi bacaan sesuai minat dan rasa ingin tahumu.
+                    </p>
+
+                </div>
+
+
+                <div class="category-container">
+
+
+                    <?php if (
+                        $kategori &&
+                        mysqli_num_rows($kategori) > 0
+                    ): ?>
+
+
+                        <?php while (
+                            $k = mysqli_fetch_assoc($kategori)
+                        ): ?>
+
+
+                            <a
+                                class="category-card"
+                                href="katalog.php?kategori=<?= (int) $k['id_kategori'] ?>"
+                            >
+
+                                <span aria-hidden="true">
+                                    ✳
+                                </span>
+
+
+                                <h3>
+
+                                    <?= htmlspecialchars(
+                                        $k['nama_kategori'],
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ) ?>
+
+                                </h3>
+
+
+                                <p>
+                                    Telusuri koleksi
+                                </p>
+
+
+                                <b>
+                                    Lihat Kategori ↗
+                                </b>
+
+                            </a>
+
+
+                        <?php endwhile; ?>
+
+
+                    <?php else: ?>
+
+
+                        <p class="category-empty">
+                            Kategori akan tampil setelah tersedia dalam database.
+                        </p>
+
+
+                    <?php endif; ?>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- MANIFESTO -->
+
+        <section class="manifesto">
+
+            <span class="section-kicker">
+                A LITTLE REMINDER
+            </span>
+
+
+            <span class="ornament">
+                ✦
+            </span>
+
+
+            <p>
+                “Buku yang baik tidak hanya selesai dibaca.
+                <br>
+
+                <em>
+                    Ia tinggal bersama kita.
+                </em>”
+            </p>
+
+
+            <small>
+                — LENTERA / BOOKS &amp; STORIES
+            </small>
+
+
+            <a
+                class="btn"
+                href="katalog.php"
+            >
+                Mulai Membaca ↗
+            </a>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- =====================================================
+         FOOTER
+         ===================================================== -->
+
+    <footer class="site-footer">
+
+
+        <div class="footer-brand">
+
+            <a href="index.php">
+
+                <b>
+                    LENTERA
+                </b>
+
+                <small>
+                    BOOKS &amp; STORIES
+                </small>
+
+            </a>
+
+
+            <p>
+                Temukan Buku. Nyalakan Inspirasi.
+            </p>
+
+        </div>
+
+
+        <div class="footer-links">
+
+            <a href="index.php">
+                Beranda
+            </a>
+
+            <a href="katalog.php">
+                Koleksi
+            </a>
+
+            <a href="tentang.php">
+                Tentang
+            </a>
+
+            <a href="login.php">
+                Masuk
+            </a>
+
+        </div>
+
+
+        <p class="footer-copyright">
+            © 2026 LENTERA · Books &amp; Stories
+        </p>
+
+
+    </footer>
+
+
+    <script
+        src="js/ui.js"
+        defer
+    ></script>
+
+
+</body>
+
+</html>
